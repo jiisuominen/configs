@@ -121,7 +121,7 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+#source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Init zoxide
 eval "$(zoxide init zsh)"
@@ -130,3 +130,6 @@ eval "$(zoxide init zsh)"
 source <(fzf --zsh)
 
 eval $(thefuck --alias)
+
+source ~/.oh-my-zsh/custom/check_encodings.zsh
+
