@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Get list of changed files (staged for commit) in the current branch
+changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(php|js|html)$')
+
+if [ -z "$changed_files" ]; then
+  # No PHP, JS, or HTML files are staged for commit
+  exit 0
+fi
+
+# Iterate over each changed file and check its encoding
+for file in $changed_files; do
+  # Try to detect encoding with 'file' command
+  encoding=$(file -I "$file" | grep -o "charset=.*" | cut -d= -f2)
+  encoding_lower=$(echo "$encoding" | tr '[:upper:]' '[:lower:]')
+  
+  # Check if file is in any interface folder
+  if echo "$file" | grep -q "/interface/"; then
+    # Files in interface folder must be UTF-8
+    if [[ "$encoding_lower" != "utf-8" ]]; then
+      echo "File '$file' is in interface folder and has encoding '$encoding'."
+      echo "Files in interface folder must be UTF-8 encoded."
+      exit 1
+    fi
+  else
+    # Other files must be ISO-8859-1
+    if [[ "$encoding_lower" != "iso-8859-1" && \
+          "$encoding_lower" != "iso8859-1" && \
+          "$encoding_lower" != "latin1" ]]; then
+      
+      # Check if it's ASCII text (which is compatible with ISO-8859-1)
+      if ! file "$file" | grep -q "ASCII text" || ! iconv -f ISO-8859-1 -t UTF-8 "$file" >/dev/null 2>&1; then
+        echo "File '$file' has encoding '$encoding' which is not ISO-8859-1."
+        echo "Files outside interface folder must be ISO-8859-1 encoded."
+        exit 1
+      fi
+    fi
+  fi
+done
+
+# If everything is fine, allow the commit to proceed
+exit 0
